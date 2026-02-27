@@ -1,0 +1,40 @@
+{
+  "name": "intercomswap",
+  "version": "1.0.0",
+  "description": "A combined token swap DEX and P2P messaging app built on the Trac Protocol.",
+  "main": "intercomswap-app.html",
+  "scripts": {
+    "start": "npx serve . --open",
+    "dev": "npx live-server --open=intercomswap-app.html",
+    "lint": "npx htmlhint intercomswap-app.html",
+    "build": "echo 'No build step required — single file app'",
+    "test": "echo 'No tests configured yet'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/intercomswap.git"
+  },
+  "keywords": [
+    "trac",
+    "bitcoin",
+    "dex",
+    "swap",
+    "intercom",
+    "messaging",
+    "p2p",
+    "web3"
+  ],
+  "author": {
+    "name": "YOUR_NAME",
+    "trac": "trac1p7yqla5zmzlj2ssjvpfa4xpcx7xrwt3qzl4c8n4qhqwv3k2zu6ls5z9d6h"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "live-server": "^1.2.2",
+    "serve": "^14.2.1",
+    "htmlhint": "^1.1.4"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
