@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>IntercomSwap</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #11111a;
+    --surface2: #1a1a28;
+    --border: #2a2a40;
+    --accent: #7c5cfc;
+    --accent2: #fc5c7d;
+    --accent3: #5cf8b8;
+    --text: #e8e8f0;
+    --muted: #6e6e8a;
+    --font-head: 'Syne', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,92,252,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,92,252,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .orb1 { width:500px; height:500px; background:rgba(124,92,252,0.12); top:-150px; left:-100px; }
+  .orb2 { width:400px; height:400px; background:rgba(252,92,125,0.08); bottom:-100px; right:-100px; }
+  .orb3 { width:300px; height:300px; background:rgba(92,248,184,0.06); top:50%; left:50%; transform:translate(-50%,-50%); }
+
+  /* NAV */
+  nav {
+    position: sticky; top:0; z-index:100;
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 16px 32px;
+    background: rgba(10,10,15,0.8);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: var(--font-head);
+    font-size: 1.4rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+
+  .logo span { color: var(--accent3); -webkit-text-fill-color: var(--accent3); }
+
+  .nav-tabs {
+    display:flex; gap:4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+  }
+
+  .nav-tab {
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .nav-tab.active {
+    background: var(--accent);
+    color: white;
+  }
+
+  .trac-badge {
+    font-size: 0.65rem;
+    color: var(--accent3);
+    background: rgba(92,248,184,0.08);
+    border: 1px solid rgba(92,248,184,0.2);
+    border-radius: 6px;
+    padding: 4px 10px;
+    letter-spacing: 0.5px;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* MAIN */
+  main {
+    position: relative; z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 24px;
+  }
+
+  /* PANELS */
+  .panel { display: none; animation: fadeIn 0.3s ease; }
+  .panel.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity:0; transform: translateY(12px); }
+    to { opacity:1; transform: translateY(0); }
+  }
+
+  /* ========================
+     SWAP PANEL
+  ======================== */
+  .swap-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  .swap-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+  }
+
+  .swap-title {
+    font-family: var(--font-head);
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff 40%, var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .swap-subtitle {
+    color: var(--muted);
+    font-size: 0.75rem;
+    margin-bottom: 28px;
+    letter-spacing: 0.5px;
+  }
+
+  .token-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 8px;
+    transition: border-color 0.2s;
+  }
+
+  .token-box:focus-within {
+    border-color: var(--accent);
+  }
+
+  .token-box-label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .token-box-row {
+    display:flex; align-items:center; gap:12px;
+  }
+
+  .token-amount {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 1.6rem;
+    outline: none;
+    width: 100%;
+  }
+
+  .token-amount::placeholder { color: var(--muted); }
+
+  .token-select {
+    display:flex; align-items:center; gap:8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--text);
+    white-space: nowrap;
+    transition: border-color 0.2s;
+  }
+
+  .token-select:hover { border-color: var(--accent); }
+
+  .token-icon {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size: 0.7rem;
+    font-weight:bold;
+  }
+
+  .swap-arrow {
+    display:flex; justify-content:center; margin: 4px 0;
+  }
+
+  .swap-arrow-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    width: 40px; height: 40px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    color: var(--accent);
+    font-size: 1.2rem;
+    transition: all 0.2s;
+  }
+
+  .swap-arrow-btn:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    transform: rotate(180deg);
+  }
+
+  .swap-info {
+    margin: 16px 0;
+    padding: 14px 16px;
+    background: var(--surface2);
+    border-radius: 12px;
+    font-size: 0.72rem;
+    color: var(--muted);
+    display:flex; flex-direction:column; gap:6px;
+  }
+
+  .swap-info-row {
+    display:flex; justify-content:space-between;
+  }
+
+  .swap-info-row span:last-child { color: var(--text); }
+
+  .btn-swap {
+    width: 100%;
+    padding: 16px;
+    border-radius: 14px;
+    border: none;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    font-family: var(--font-head);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-swap:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(124,92,252,0.4);
+  }
+
+  /* Stats sidebar */
+  .stats-sidebar { display:flex; flex-direction:column; gap:16px; }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+  }
+
+  .stat-card-title {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+  }
+
+  .stat-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 0.78rem;
+  }
+
+  .stat-row:last-child { border-bottom: none; }
+
+  .stat-val { color: var(--accent3); font-weight:700; }
+  .stat-val.red { color: var(--accent2); }
+
+  .pool-bar {
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 3px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+
+  .pool-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 0.8s ease;
+  }
+
+  /* ========================
+     MESSAGES PANEL
+  ======================== */
+  .msg-layout {
+    display:grid;
+    grid-template-columns: 280px 1fr;
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    height: 600px;
+  }
+
+  .msg-sidebar {
+    border-right: 1px solid var(--border);
+    display:flex; flex-direction:column;
+  }
+
+  .msg-sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+
+  .msg-sidebar-header h3 {
+    font-family: var(--font-head);
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .new-msg-btn {
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    width: 28px; height: 28px;
+    font-size: 1.1rem;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition: all 0.2s;
+  }
+
+  .new-msg-btn:hover { background: var(--accent2); }
+
+  .msg-search {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .msg-search input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    padding: 8px 12px;
+    outline:none;
+    transition: border-color 0.2s;
+  }
+
+  .msg-search input:focus { border-color: var(--accent); }
+  .msg-search input::placeholder { color: var(--muted); }
+
+  .conv-list {
+    flex:1; overflow-y:auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .conv-item {
+    padding: 14px 16px;
+    cursor:pointer;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    transition: background 0.15s;
+    display:flex; gap:10px; align-items:center;
+  }
+
+  .conv-item:hover, .conv-item.active {
+    background: rgba(124,92,252,0.1);
+  }
+
+  .conv-avatar {
+    width:36px; height:36px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:0.8rem; font-weight:bold;
+    flex-shrink:0;
+  }
+
+  .conv-info { flex:1; min-width:0; }
+
+  .conv-name {
+    font-size:0.8rem; font-weight:700;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    margin-bottom:3px;
+  }
+
+  .conv-preview {
+    font-size:0.7rem; color:var(--muted);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+
+  .conv-time { font-size:0.65rem; color:var(--muted); }
+
+  .unread-dot {
+    width:8px; height:8px;
+    border-radius:50%;
+    background:var(--accent);
+    flex-shrink:0;
+  }
+
+  /* Chat area */
+  .chat-area {
+    display:flex; flex-direction:column;
+  }
+
+  .chat-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display:flex; align-items:center; gap:12px;
+  }
+
+  .chat-header-info { flex:1; }
+
+  .chat-header-name {
+    font-family: var(--font-head);
+    font-size:0.95rem; font-weight:700;
+  }
+
+  .chat-header-addr {
+    font-size:0.65rem; color:var(--muted);
+  }
+
+  .chat-status {
+    width:8px; height:8px; border-radius:50%;
+    background:var(--accent3);
+    flex-shrink:0;
+  }
+
+  .messages {
+    flex:1; overflow-y:auto; padding:20px;
+    display:flex; flex-direction:column; gap:12px;
+    scrollbar-width:thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .msg-bubble {
+    max-width:70%;
+    padding:10px 14px;
+    border-radius:14px;
+    font-size:0.78rem;
+    line-height:1.5;
+  }
+
+  .msg-bubble.incoming {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-bottom-left-radius:4px;
+    align-self:flex-start;
+  }
+
+  .msg-bubble.outgoing {
+    background: linear-gradient(135deg, var(--accent), #5c4fc8);
+    border-bottom-right-radius:4px;
+    align-self:flex-end;
+  }
+
+  .msg-meta {
+    font-size:0.6rem; color:var(--muted);
+    margin-top:4px;
+    text-align:right;
+  }
+
+  .msg-meta.left { text-align:left; }
+
+  .chat-input-area {
+    padding:16px 20px;
+    border-top:1px solid var(--border);
+    display:flex; gap:10px; align-items:center;
+  }
+
+  .chat-input {
+    flex:1;
+    background: var(--surface2);
+    border:1px solid var(--border);
+    border-radius:12px;
+    color:var(--text);
+    font-family:var(--font-mono);
+    font-size:0.78rem;
+    padding:10px 16px;
+    outline:none;
+    transition:border-color 0.2s;
+    resize:none;
+  }
+
+  .chat-input:focus { border-color:var(--accent); }
+  .chat-input::placeholder { color:var(--muted); }
+
+  .send-btn {
+    background:var(--accent);
+    border:none;
+    border-radius:10px;
+    width:40px; height:40px;
+    cursor:pointer;
+    color:white;
+    font-size:1rem;
+    display:flex; align-items:center; justify-content:center;
+    transition:all 0.2s;
+    flex-shrink:0;
+  }
+
+  .send-btn:hover {
+    background:var(--accent2);
+    transform:scale(1.05);
+  }
+
+  /* ========================
+     PORTFOLIO PANEL
+  ======================== */
+  .portfolio-grid {
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:20px;
+  }
+
+  .port-card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:24px;
+  }
+
+  .port-card.wide { grid-column: span 2; }
+
+  .port-card-head {
+    display:flex; justify-content:space-between; align-items:flex-start;
+    margin-bottom:20px;
+  }
+
+  .port-card-title {
+    font-family:var(--font-head);
+    font-size:0.85rem;
+    font-weight:700;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:1px;
+  }
+
+  .port-val {
+    font-family:var(--font-head);
+    font-size:2rem;
+    font-weight:800;
+  }
+
+  .port-change {
+    font-size:0.75rem;
+    padding:3px 10px;
+    border-radius:6px;
+  }
+
+  .port-change.up { background:rgba(92,248,184,0.1); color:var(--accent3); }
+  .port-change.down { background:rgba(252,92,125,0.1); color:var(--accent2); }
+
+  .token-list { display:flex; flex-direction:column; gap:10px; }
+
+  .token-item {
+    display:flex; align-items:center; gap:12px;
+    padding:10px 14px;
+    background:var(--surface2);
+    border-radius:12px;
+    border:1px solid var(--border);
+  }
+
+  .token-item-info { flex:1; }
+  .token-item-name { font-size:0.85rem; font-weight:700; }
+  .token-item-amount { font-size:0.7rem; color:var(--muted); margin-top:2px; }
+  .token-item-val { text-align:right; }
+  .token-item-usd { font-size:0.85rem; font-weight:700; }
+  .token-item-change { font-size:0.7rem; color:var(--accent3); }
+
+  /* Mini chart */
+  .mini-chart {
+    width:100%; height:80px;
+    margin-top:16px;
+  }
+
+  .trac-address-box {
+    background:var(--surface2);
+    border:1px solid rgba(92,248,184,0.25);
+    border-radius:12px;
+    padding:14px 16px;
+    margin-bottom:20px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  .trac-address-box .label {
+    font-size:0.65rem;
+    color:var(--accent3);
+    text-transform:uppercase;
+    letter-spacing:1px;
+    white-space:nowrap;
+  }
+
+  .trac-address-box .addr {
+    font-size:0.72rem;
+    color:var(--text);
+    word-break:break-all;
+    flex:1;
+  }
+
+  .copy-btn {
+    background:none;
+    border:1px solid var(--border);
+    border-radius:6px;
+    color:var(--muted);
+    font-family:var(--font-mono);
+    font-size:0.65rem;
+    padding:4px 10px;
+    cursor:pointer;
+    transition:all 0.2s;
+    white-space:nowrap;
+  }
+
+  .copy-btn:hover { border-color:var(--accent3); color:var(--accent3); }
+
+  /* TOAST */
+  .toast {
+    position:fixed; bottom:30px; right:30px;
+    background:var(--accent3);
+    color:#000;
+    font-family:var(--font-mono);
+    font-size:0.75rem;
+    padding:10px 20px;
+    border-radius:10px;
+    z-index:999;
+    opacity:0;
+    transform:translateY(10px);
+    transition:all 0.3s;
+    font-weight:700;
+  }
+
+  .toast.show { opacity:1; transform:translateY(0); }
+
+  /* Responsive */
+  @media (max-width:768px) {
+    .swap-layout { grid-template-columns:1fr; }
+    .msg-layout { grid-template-columns:1fr; height:auto; }
+    .msg-sidebar { height:200px; }
+    .portfolio-grid { grid-template-columns:1fr; }
+    .port-card.wide { grid-column:span 1; }
+    nav { padding:12px 16px; }
+    .trac-badge { display:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Intercom<span>Swap</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPanel('swap')">⇄ Swap</button>
+    <button class="nav-tab" onclick="showPanel('messages')">✉ Messages</button>
+    <button class="nav-tab" onclick="showPanel('portfolio')">◈ Portfolio</button>
+  </div>
+  <div class="trac-badge">trac1p7yqla5...5z9d6h</div>
+</nav>
+
+<main>
+
+  <!-- ======== SWAP PANEL ======== -->
+  <div id="panel-swap" class="panel active">
+    <div class="trac-address-box">
+      <span class="label">Your Trac Address</span>
+      <span class="addr">trac1p7yqla5zmzlj2ssjvpfa4xpcx7xrwt3qzl4c8n4qhqwv3k2zu6ls5z9d6h</span>
+      <button class="copy-btn" onclick="copyTrac()">Copy</button>
+    </div>
+
+    <div class="swap-layout">
+      <div class="swap-card">
+        <h1 class="swap-title">Swap Tokens</h1>
+        <p class="swap-subtitle">// instant cross-chain execution on trac protocol</p>
+
+        <div class="token-box">
+          <div class="token-box-label">You Pay</div>
+          <div class="token-box-row">
+            <input class="token-amount" type="number" placeholder="0.00" id="amtIn" oninput="calcSwap()" />
+            <div class="token-select" onclick="openTokenSelect('in')">
+              <div class="token-icon" style="background:linear-gradient(135deg,#f7931a,#ffb347)">₿</div>
+              <span id="tokenIn">BTC</span>
+              <span style="color:var(--muted)">▾</span>
+            </div>
+          </div>
+          <div style="font-size:0.7rem; color:var(--muted); margin-top:8px;">Balance: 0.24831 BTC</div>
+        </div>
+
+        <div class="swap-arrow">
+          <div class="swap-arrow-btn" onclick="flipTokens()">⇅</div>
+        </div>
+
+        <div class="token-box">
+          <div class="token-box-label">You Receive</div>
+          <div class="token-box-row">
+            <input class="token-amount" type="number" placeholder="0.00" id="amtOut" readonly />
+            <div class="token-select" onclick="openTokenSelect('out')">
+              <div class="token-icon" style="background:linear-gradient(135deg,#627eea,#a78bfa)">Ξ</div>
+              <span id="tokenOut">TRAC</span>
+              <span style="color:var(--muted)">▾</span>
+            </div>
+          </div>
+          <div style="font-size:0.7rem; color:var(--muted); margin-top:8px;">Balance: 1,482.00 TRAC</div>
+        </div>
+
+        <div class="swap-info">
+          <div class="swap-info-row"><span>Rate</span><span>1 BTC = 2,847.3 TRAC</span></div>
+          <div class="swap-info-row"><span>Price Impact</span><span style="color:var(--accent3)">0.12%</span></div>
+          <div class="swap-info-row"><span>Min. Received</span><span id="minRec">—</span></div>
+          <div class="swap-info-row"><span>Network Fee</span><span>~0.00041 BTC</span></div>
+          <div class="swap-info-row"><span>Route</span><span>BTC → TRAC (direct)</span></div>
+        </div>
+
+        <button class="btn-swap" onclick="doSwap()">Swap Now →</button>
+      </div>
+
+      <div class="stats-sidebar">
+        <div class="stat-card">
+          <div class="stat-card-title">// market stats</div>
+          <div class="stat-row"><span>BTC/USD</span><span class="stat-val">$67,241</span></div>
+          <div class="stat-row"><span>TRAC/USD</span><span class="stat-val">$23.61</span></div>
+          <div class="stat-row"><span>ETH/USD</span><span class="stat-val">$3,412</span></div>
+          <div class="stat-row"><span>24h Volume</span><span class="stat-val">$4.2M</span></div>
+          <div class="stat-row"><span>Liquidity</span><span class="stat-val">$18.7M</span></div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-title">// pool liquidity</div>
+          <div class="stat-row"><span>BTC/TRAC</span><span class="stat-val">68%</span></div>
+          <div class="pool-bar"><div class="pool-bar-fill" style="width:68%"></div></div>
+          <div class="stat-row" style="margin-top:12px"><span>ETH/TRAC</span><span class="stat-val">47%</span></div>
+          <div class="pool-bar"><div class="pool-bar-fill" style="width:47%; background: linear-gradient(90deg,var(--accent2),var(--accent))"></div></div>
+          <div class="stat-row" style="margin-top:12px"><span>USDT/TRAC</span><span class="stat-val">91%</span></div>
+          <div class="pool-bar"><div class="pool-bar-fill" style="width:91%; background: linear-gradient(90deg,var(--accent3),var(--accent))"></div></div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-title">// recent swaps</div>
+          <div class="stat-row"><span>0.5 BTC→TRAC</span><span class="stat-val">2s ago</span></div>
+          <div class="stat-row"><span>120 ETH→BTC</span><span class="stat-val">14s ago</span></div>
+          <div class="stat-row"><span>5000 USDT→TRAC</span><span class="stat-val">1m ago</span></div>
+          <div class="stat-row"><span>0.02 BTC→ETH</span><span class="stat-val">3m ago</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== MESSAGES PANEL ======== -->
+  <div id="panel-messages" class="panel">
+    <div class="trac-address-box">
+      <span class="label">Messaging as</span>
+      <span class="addr">trac1p7yqla5zmzlj2ssjvpfa4xpcx7xrwt3qzl4c8n4qhqwv3k2zu6ls5z9d6h</span>
+      <button class="copy-btn" onclick="copyTrac()">Copy</button>
+    </div>
+
+    <div class="msg-layout">
+      <!-- Sidebar -->
+      <div class="msg-sidebar">
+        <div class="msg-sidebar-header">
+          <h3>Messages</h3>
+          <button class="new-msg-btn" onclick="newConv()">+</button>
+        </div>
+        <div class="msg-search">
+          <input type="text" placeholder="Search conversations..." oninput="filterConvs(this.value)" />
+        </div>
+        <div class="conv-list" id="conv-list">
+          <!-- populated by JS -->
+        </div>
+      </div>
+
+      <!-- Chat -->
+      <div class="chat-area">
+        <div class="chat-header">
+          <div class="chat-status"></div>
+          <div class="chat-header-info">
+            <div class="chat-header-name" id="chat-name">Select a conversation</div>
+            <div class="chat-header-addr" id="chat-addr">—</div>
+          </div>
+        </div>
+        <div class="messages" id="messages-area">
+          <div style="flex:1; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:0.8rem;">
+            Select a conversation to start messaging
+          </div>
+        </div>
+        <div class="chat-input-area">
+          <textarea class="chat-input" id="chat-input" placeholder="Type a message..." rows="1"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
+          <button class="send-btn" onclick="sendMsg()">➤</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== PORTFOLIO PANEL ======== -->
+  <div id="panel-portfolio" class="panel">
+    <div class="trac-address-box">
+      <span class="label">Portfolio for</span>
+      <span class="addr">trac1p7yqla5zmzlj2ssjvpfa4xpcx7xrwt3qzl4c8n4qhqwv3k2zu6ls5z9d6h</span>
+      <button class="copy-btn" onclick="copyTrac()">Copy</button>
+    </div>
+
+    <div class="portfolio-grid">
+      <div class="port-card">
+        <div class="port-card-head">
+          <div class="port-card-title">Total Value</div>
+          <span class="port-change up">+4.82% ↑</span>
+        </div>
+        <div class="port-val">$48,291.44</div>
+        <canvas class="mini-chart" id="chart-total"></canvas>
+      </div>
+
+      <div class="port-card">
+        <div class="port-card-head">
+          <div class="port-card-title">24h P&L</div>
+          <span class="port-change up">Today</span>
+        </div>
+        <div class="port-val" style="color:var(--accent3)">+$2,214.30</div>
+        <canvas class="mini-chart" id="chart-pnl"></canvas>
+      </div>
+
+      <div class="port-card wide">
+        <div class="port-card-head">
+          <div class="port-card-title">Token Holdings</div>
+          <span style="font-size:0.7rem; color:var(--muted)">Updated just now</span>
+        </div>
+        <div class="token-list">
+          <div class="token-item">
+            <div class="token-icon" style="background:linear-gradient(135deg,#f7931a,#ffb347); width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">₿</div>
+            <div class="token-item-info">
+              <div class="token-item-name">Bitcoin</div>
+              <div class="token-item-amount">0.24831 BTC</div>
+            </div>
+            <div class="token-item-val">
+              <div class="token-item-usd">$16,703</div>
+              <div class="token-item-change">+3.2%</div>
+            </div>
+          </div>
+          <div class="token-item">
+            <div class="token-icon" style="background:linear-gradient(135deg,#5c7df8,#a78bfa); width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">T</div>
+            <div class="token-item-info">
+              <div class="token-item-name">TRAC</div>
+              <div class="token-item-amount">1,482.00 TRAC</div>
+            </div>
+            <div class="token-item-val">
+              <div class="token-item-usd">$34,988</div>
+              <div class="token-item-change">+6.1%</div>
+            </div>
+          </div>
+          <div class="token-item">
+            <div class="token-icon" style="background:linear-gradient(135deg,#627eea,#4fc3f7); width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">Ξ</div>
+            <div class="token-item-info">
+              <div class="token-item-name">Ethereum</div>
+              <div class="token-item-amount">2.14 ETH</div>
+            </div>
+            <div class="token-item-val">
+              <div class="token-item-usd">$7,302</div>
+              <div class="token-item-change" style="color:var(--accent2)">-1.4%</div>
+            </div>
+          </div>
+          <div class="token-item">
+            <div class="token-icon" style="background:linear-gradient(135deg,#26a17b,#5cf8b8); width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">$</div>
+            <div class="token-item-info">
+              <div class="token-item-name">USDT</div>
+              <div class="token-item-amount">500.00 USDT</div>
+            </div>
+            <div class="token-item-val">
+              <div class="token-item-usd">$500</div>
+              <div class="token-item-change">0.00%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ---- NAVIGATION ----
+function showPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'portfolio') drawCharts();
+}
+
+// ---- TOAST ----
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ---- TRAC COPY ----
+function copyTrac() {
+  navigator.clipboard.writeText('trac1p7yqla5zmzlj2ssjvpfa4xpcx7xrwt3qzl4c8n4qhqwv3k2zu6ls5z9d6h')
+    .then(() => showToast('Trac address copied!'))
+    .catch(() => showToast('Copy: trac1p7yqla5zmzlj2ssjvpfa4xpcx7xrwt3qzl4c8n4qhqwv3k2zu6ls5z9d6h'));
+}
+
+// ---- SWAP ----
+const RATE = 2847.3;
+function calcSwap() {
+  const v = parseFloat(document.getElementById('amtIn').value) || 0;
+  const out = (v * RATE * 0.997).toFixed(4);
+  document.getElementById('amtOut').value = v > 0 ? out : '';
+  document.getElementById('minRec').textContent = v > 0 ? out + ' TRAC' : '—';
+}
+
+function flipTokens() {
+  const ti = document.getElementById('tokenIn');
+  const to = document.getElementById('tokenOut');
+  [ti.textContent, to.textContent] = [to.textContent, ti.textContent];
+  document.getElementById('amtIn').value = '';
+  document.getElementById('amtOut').value = '';
+  document.getElementById('minRec').textContent = '—';
+  showToast('Tokens flipped!');
+}
+
+function doSwap() {
+  const amt = document.getElementById('amtIn').value;
+  if (!amt || parseFloat(amt) <= 0) { showToast('Enter an amount first'); return; }
+  showToast(`Swap of ${amt} BTC → TRAC submitted!`);
+  document.getElementById('amtIn').value = '';
+  document.getElementById('amtOut').value = '';
+  document.getElementById('minRec').textContent = '—';
+}
+
+// ---- MESSAGES ----
+const TRAC = 'trac1p7yqla5zmzlj2ssjvpfa4xpcx7xrwt3qzl4c8n4qhqwv3k2zu6ls5z9d6h';
+
+const convData = [
+  {
+    id:1, name:'Alice.trac', addr:'trac1qxy2k...d3h9', color:'#7c5cfc',
+    msgs:[
+      {out:false, text:'Hey! Want to swap 0.5 BTC for TRAC?', time:'10:02'},
+      {out:true, text:'Sure, send me your address', time:'10:03'},
+      {out:false, text:'It\'s trac1qxy2kgdygjrsqtzq2n0yrf0000...', time:'10:04'},
+      {out:true, text:'Done! Check your wallet 🎉', time:'10:05'},
+    ]
+  },
+  {
+    id:2, name:'Bob.sats', addr:'trac1qzm3...f7a2', color:'#fc5c7d',
+    msgs:[
+      {out:false, text:'IntercomSwap is insane btw', time:'09:14'},
+      {out:true, text:'Right? Built on Trac protocol 🔥', time:'09:15'},
+    ]
+  },
+  {
+    id:3, name:'Carol.node', addr:'trac1p9xq...b8c1', color:'#5cf8b8',
+    msgs:[
+      {out:true, text:'Liquidity pool is up', time:'Yesterday'},
+    ]
+  }
+];
+
+let activeConv = null;
+
+function renderConvList(filter='') {
+  const el = document.getElementById('conv-list');
+  el.innerHTML = '';
+  convData
+    .filter(c => c.name.toLowerCase().includes(filter.toLowerCase()))
+    .forEach(c => {
+      const last = c.msgs[c.msgs.length-1];
+      const div = document.createElement('div');
+      div.className = 'conv-item' + (activeConv?.id === c.id ? ' active' : '');
+      div.innerHTML = `
+        <div class="conv-avatar" style="background:${c.color}22; color:${c.color}">${c.name[0]}</div>
+        <div class="conv-info">
+          <div class="conv-name">${c.name}</div>
+          <div class="conv-preview">${last.out ? 'You: ' : ''}${last.text}</div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+          <div class="conv-time">${last.time}</div>
+          ${!last.out && c.id !== activeConv?.id ? '<div class="unread-dot"></div>' : ''}
+        </div>
+      `;
+      div.onclick = () => openConv(c);
+      el.appendChild(div);
+    });
+}
+
+function openConv(c) {
+  activeConv = c;
+  renderConvList();
+  document.getElementById('chat-name').textContent = c.name;
+  document.getElementById('chat-addr').textContent = c.addr;
+  const area = document.getElementById('messages-area');
+  area.innerHTML = '';
+  c.msgs.forEach(m => appendBubble(m.out, m.text, m.time));
+}
+
+function appendBubble(out, text, time) {
+  const area = document.getElementById('messages-area');
+  const div = document.createElement('div');
+  div.innerHTML = `
+    <div class="msg-bubble ${out ? 'outgoing' : 'incoming'}">${text}</div>
+    <div class="msg-meta ${out ? '' : 'left'}">${time}</div>
+  `;
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function sendMsg() {
+  if (!activeConv) { showToast('Select a conversation first'); return; }
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  const now = new Date();
+  const time = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+  activeConv.msgs.push({out:true, text, time});
+  appendBubble(true, text, time);
+  input.value = '';
+  renderConvList();
+}
+
+function filterConvs(val) { renderConvList(val); }
+
+function newConv() {
+  const addr = prompt('Enter Trac address to message:');
+  if (!addr) return;
+  const id = Date.now();
+  convData.unshift({ id, name: addr.slice(0,10)+'...', addr, color:'#7c5cfc', msgs:[] });
+  renderConvList();
+  openConv(convData[0]);
+}
+
+renderConvList();
+
+// ---- CHARTS ----
+function drawCharts() {
+  drawSparkline('chart-total',
+    [38000,40200,39800,42100,43500,41800,45200,46100,44800,47000,48291],
+    '#7c5cfc');
+  drawSparkline('chart-pnl',
+    [0,200,150,600,900,700,1100,1500,1200,1800,2214],
+    '#5cf8b8');
+}
+
+function drawSparkline(id, data, color) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth || 400;
+  canvas.height = 80;
+  const w = canvas.width, h = canvas.height;
+  const min = Math.min(...data), max = Math.max(...data);
+  const pts = data.map((v,i) => ({
+    x: (i / (data.length-1)) * w,
+    y: h - ((v - min) / (max - min)) * (h - 10) - 5
+  }));
+  // Gradient fill
+  const grad = ctx.createLinearGradient(0,0,0,h);
+  grad.addColorStop(0, color + '44');
+  grad.addColorStop(1, color + '00');
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  pts.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.lineTo(w, h); ctx.lineTo(0, h);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+  // Line
+  ctx.beginPath();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.moveTo(pts[0].x, pts[0].y);
+  pts.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.stroke();
+  // Dot at end
+  const last = pts[pts.length-1];
+  ctx.beginPath();
+  ctx.arc(last.x, last.y, 4, 0, Math.PI*2);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+</script>
+</body>
+</html>
